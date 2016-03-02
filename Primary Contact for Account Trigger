@@ -1,0 +1,37 @@
+trigger PrimaryContact on Contact (before insert, before update) {
+  
+   set<id> getid = new set<id>();
+    string contactId;
+    List<Contact> conList = new List<Contact>();
+  
+    // Trigger Functionality
+    if(Trigger.isInsert || Trigger.isUpdate) {
+      
+        for(Contact cont: Trigger.New) {
+          
+            if(cont.Primary_Contact__c == true) {
+              
+                getid.add(cont.AccountId);
+                contactId = cont.id;
+            }
+        }
+    }
+  
+    // Fetching the other Contact which has primary contact checked
+    List<contact> cList = [select id, Primary_Contact__c from contact where accountid IN: getid                                                   AND Primary_Contact__c = true];
+  
+    // Unchecking the already checked primary contact
+    if(cList.size() > 0) {
+      
+        for(Contact newClst: cList) {
+          
+            if(newClst.id != contactId) {
+              
+                newClst.Primary_Contact__c = false;
+                conList .add(newClst);
+            }
+        }
+    } 
+    update conList; 
+  }
+
